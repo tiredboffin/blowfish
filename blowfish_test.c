@@ -82,7 +82,7 @@ void test_recover(BLOWFISH_CTX *ctx)
   /* test some randomly generated keys */
   srand(0x243F6A88L);
   printf("random key tests: %d rounds\n", NUM_RAND_TESTS);
-  for (int k = 0; k < 1<<20; k++)
+  for (int k = 0; k < NUM_RAND_TESTS; k++)
   {
     uint32_t random_key[16];
     for (int i = 0; i < 16; i++)
