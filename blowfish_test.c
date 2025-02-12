@@ -90,7 +90,7 @@ void test_recover(BLOWFISH_CTX *ctx)
     Blowfish_Init_P_from_Key(ctx, (uint8_t *)random_key, sizeof(random_key));
     memcpy(P, ctx->P, sizeof(P));
 
-    Blowfish_Init_P_from_P(ctx, P);
+    Blowfish_Init_P_from_P(ctx, P); /* Pretend P is from external source otherwise this memcpy and Init_P_from_P() is not needed of course */
     if (test_recover_key(ctx, (uint8_t *)random_key, sizeof(random_key), 0) != 0)
     {
       print_hex("KEY:", (uint8_t *)random_key, sizeof(random_key));
