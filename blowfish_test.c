@@ -67,7 +67,7 @@ int test_recover_key(BLOWFISH_CTX *ctx, char *testkey, int len, int verbose)
 void test_recover(BLOWFISH_CTX *ctx)
 {
 
-  P18 P; /* P is input and comee from external source, here it is initialized from a known key for testing purposes */
+  P18 P; /* P is input and comes from external source, here it is initialized from a known key for testing purposes */
 
   /* test N key */
   unsigned char nkey[] = {0xff, 0xff, 0xaa, 0x55, 0x11, 0x22, 0x33, 0x00};
