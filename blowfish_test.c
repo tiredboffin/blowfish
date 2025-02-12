@@ -67,13 +67,15 @@ int test_recover_key(BLOWFISH_CTX *ctx, char *testkey, int len, int verbose)
 void test_recover(BLOWFISH_CTX *ctx)
 {
 
-  P18 P; /* P is input and comes from external source, here it is initialized from a known key for testing purposes */
+  P18 P;
 
   /* test N key */
   unsigned char nkey[] = {0xff, 0xff, 0xaa, 0x55, 0x11, 0x22, 0x33, 0x00};
   Blowfish_Init_P_from_Key(ctx, (uint8_t *)&nkey[0], sizeof(nkey));
   memcpy(P, ctx->P, sizeof(P));
 
+  /* Pretend P is from external source otherwise this memcpy and Init_P_from_P()
+     is not needed of course */
   Blowfish_Init_P_from_P(ctx, P);
   test_recover_key(ctx, nkey, sizeof(nkey), 1);
 
@@ -88,9 +90,10 @@ void test_recover(BLOWFISH_CTX *ctx)
       random_key[i] = rand() % 0xFFFFFFFF;
     }
     Blowfish_Init_P_from_Key(ctx, (uint8_t *)random_key, sizeof(random_key));
+    /* Not needed for testing
     memcpy(P, ctx->P, sizeof(P));
-
-    Blowfish_Init_P_from_P(ctx, P); /* Pretend P is from external source otherwise this memcpy and Init_P_from_P() is not needed of course */
+    Blowfish_Init_P_from_P(ctx, P);
+    */
     if (test_recover_key(ctx, (uint8_t *)random_key, sizeof(random_key), 0) != 0)
     {
       print_hex("KEY:", (uint8_t *)random_key, sizeof(random_key));
