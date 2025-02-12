@@ -42,39 +42,63 @@ void print_P(const char *msg, BLOWFISH_CTX *ctx)
   printf("\n");
 }
 
-void test_recover_key(BLOWFISH_CTX *ctx, char *testkey, int len)
+int test_recover_key(BLOWFISH_CTX *ctx, char *testkey, int len, int verbose)
 {
   uint8_t tmp[64];
-  print_P("Original P table  => \n", ctx);
+
+  if (verbose) print_P("Original P table  => \n", ctx);
   Blowfish_Recover_P(ctx);
-  print_P("Recovered P table =>\n", ctx);
+  if (verbose) print_P("Recovered P table =>\n", ctx);
   Blowfish_Recover_Key(ctx, tmp, sizeof(tmp));
   // print_P("Recovered key (machine endianess) =>\n", ctx);
-  print_hex("Recovered Key =>\n", tmp, sizeof(tmp));
-  if (memcmp(tmp, testkey, len) == 0)
-    printf("Test key recovered OK\n");
-  else
-    printf("Test key recovery FAILED\n");
+  if (verbose) print_hex("Recovered Key =>\n", tmp, sizeof(tmp));
+  if (memcmp(tmp, testkey, len) == 0) {
+    if (verbose) printf("Test key recovered OK\n");
+    return 0;
+  }
+  else {
+    if (verbose) printf("Test key recovery FAILED\n");
+    return -1;
+  }
 }
+
+#define NUM_RAND_TESTS (1<<20)
 
 void test_recover(BLOWFISH_CTX *ctx)
 {
+
+  P18 P; /* P is input and comee from external source, here it is initialized from a known key for testing purposes */
+
   /* test N key */
   unsigned char nkey[] = {0xff, 0xff, 0xaa, 0x55, 0x11, 0x22, 0x33, 0x00};
-  Blowfish_Init_P(ctx, (uint8_t *)&nkey[0], sizeof(nkey));
-  test_recover_key(ctx, nkey, sizeof(nkey));
+  Blowfish_Init_P_from_Key(ctx, (uint8_t *)&nkey[0], sizeof(nkey));
+  memcpy(P, ctx->P, sizeof(P));
+
+  Blowfish_Init_P_from_P(ctx, P);
+  test_recover_key(ctx, nkey, sizeof(nkey), 1);
 
   /* test some randomly generated keys */
-  for (int k = 0; k < 8; k++)
+  srand(0x243F6A88L);
+  printf("random key tests: %d rounds\n", NUM_RAND_TESTS);
+  for (int k = 0; k < 1<<20; k++)
   {
-    uint32_t random[16];
+    uint32_t random_key[16];
     for (int i = 0; i < 16; i++)
     {
-      random[i] = rand() % 0xFFFFFFFF;
+      random_key[i] = rand() % 0xFFFFFFFF;
     }
-    Blowfish_Init_P(ctx, (uint8_t *)&random[0], sizeof(random));
-    test_recover_key(ctx, (uint8_t *)&random, sizeof(random));
+    Blowfish_Init_P_from_Key(ctx, (uint8_t *)random_key, sizeof(random_key));
+    memcpy(P, ctx->P, sizeof(P));
+
+    Blowfish_Init_P_from_P(ctx, P);
+    if (test_recover_key(ctx, (uint8_t *)random_key, sizeof(random_key), 0) != 0)
+    {
+      print_hex("KEY:", (uint8_t *)random_key, sizeof(random_key));
+      printf("random key test failed at %d round\n",k);
+      return;
+    }
   }
+  printf("random key test OK\n");
 }
 
 void main(void)

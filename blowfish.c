@@ -370,7 +370,26 @@ void Blowfish_Decrypt(BLOWFISH_CTX *ctx, uint32_t *xl, uint32_t *xr)
   *xr = Xr;
 }
 
-void Blowfish_Init_P(BLOWFISH_CTX *ctx, uint8_t *key, int32_t keyLen)
+
+void Blowfish_Init_P_from_P(BLOWFISH_CTX *ctx, P18 P)
+{
+  int32_t i, j, k;
+  uint32_t data, datal, datar;
+
+  for (i = 0; i < 4; i++)
+  {
+    for (j = 0; j < 256; j++)
+      ctx->S[i][j] = ORIG_S[i][j];
+  }
+
+  for (i = 0; i < N + 2; i += 2)
+  {
+    ctx->P[i] = P[i];
+    ctx->P[i + 1] = P[i+1];
+  }
+}
+
+void Blowfish_Init_P_from_Key(BLOWFISH_CTX *ctx, uint8_t *key, int32_t keyLen)
 {
   int32_t i, j, k;
   uint32_t data, datal, datar;
