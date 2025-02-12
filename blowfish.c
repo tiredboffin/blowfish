@@ -489,10 +489,10 @@ void Blowfish_Init(BLOWFISH_CTX *ctx, uint8_t *key, int32_t keyLen)
   }
 }
 
-static void D(BLOWFISH_CTX *ctx, int idx, int len, uint32_t *l, uint32_t *r)
+static void D(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
 {
-  uint32_t Xl;
-  uint32_t Xr;
+  uint32_t Xl, Xr;
+
   if (idx < 2)
   {
     Xl = 0;
@@ -503,11 +503,11 @@ static void D(BLOWFISH_CTX *ctx, int idx, int len, uint32_t *l, uint32_t *r)
     Xl = ctx->P[idx - 2];
     Xr = ctx->P[idx - 1];
   }
-  for (int i = 0; i < len; ++i)
+  for (int i = 0; i < idx; ++i)
   {
     uint32_t tmp;
     Xl = Xl ^ ctx->P[i];
-    Xr = F(ctx, Xl) ^ Xr;
+    Xr = Xr ^ F(ctx, Xl);
     tmp = Xl;
     Xl = Xr;
     Xr = tmp;
@@ -519,27 +519,28 @@ static void D(BLOWFISH_CTX *ctx, int idx, int len, uint32_t *l, uint32_t *r)
 static void U(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
 {
   uint32_t Xl = ctx->P[idx] ^ ctx->P[N + 1];
-  ;
   uint32_t Xr = ctx->P[idx + 1] ^ ctx->P[N];
+
   for (int i = N - 1; i > idx + 1; --i)
   {
     uint32_t tmp = Xl;
-    Xl = F(ctx, Xl) ^ Xr;
+    Xl = Xr ^ F(ctx, Xl);
     Xr = tmp ^ ctx->P[i];
   }
+
   *l = Xl;
   *r = Xr;
 }
 
 static void R(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
 {
-  uint32_t Linp, Rinp, Lout, Rout;
+  uint32_t Ld, Rd, Lu, Ru;
 
-  D(ctx, idx, idx, &Linp, &Rinp);
-  U(ctx, idx, &Lout, &Rout);
+  D(ctx, idx, &Ld, &Rd);
+  U(ctx, idx, &Lu, &Ru);
 
-  *l = F(ctx, Lout) ^ Rinp ^ Rout;
-  *r = F(ctx, F(ctx, Lout) ^ Rout) ^ Linp ^ Lout;
+  *l = F(ctx, Lu) ^ Rd ^ Ru;
+  *r = F(ctx, F(ctx, Lu) ^ Ru) ^ Ld ^ Lu;
 }
 
 void Blowfish_Recover_P(BLOWFISH_CTX *ctx)
@@ -549,7 +550,7 @@ void Blowfish_Recover_P(BLOWFISH_CTX *ctx)
   uint32_t tmpN = ctx->P[N];
   uint32_t tmpN1 = ctx->P[N + 1];
 
-  D(ctx, N, N, &datal, &datar);
+  D(ctx, N, &datal, &datar);
 
   ctx->P[N + 1] = datal ^ tmpN;
   ctx->P[N] = datar ^ tmpN1;
