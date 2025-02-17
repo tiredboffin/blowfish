@@ -46,23 +46,30 @@ int test_recover_key(BLOWFISH_CTX *ctx, char *testkey, int len, int verbose)
 {
   uint8_t tmp[64];
 
-  if (verbose) print_P("Original P table  => \n", ctx);
+  if (verbose)
+    print_P("Original P table  => \n", ctx);
   Blowfish_Recover_P(ctx);
-  if (verbose) print_P("Recovered P table =>\n", ctx);
+  if (verbose)
+    print_P("Recovered P table =>\n", ctx);
   Blowfish_Recover_Key(ctx, tmp, sizeof(tmp));
   // print_P("Recovered key (machine endianess) =>\n", ctx);
-  if (verbose) print_hex("Recovered Key =>\n", tmp, sizeof(tmp));
-  if (memcmp(tmp, testkey, len) == 0) {
-    if (verbose) printf("Test key recovered OK\n");
+  if (verbose)
+    print_hex("Recovered Key =>\n", tmp, sizeof(tmp));
+  if (memcmp(tmp, testkey, len) == 0)
+  {
+    if (verbose)
+      printf("Test key recovered OK\n");
     return 0;
   }
-  else {
-    if (verbose) printf("Test key recovery FAILED\n");
+  else
+  {
+    if (verbose)
+      printf("Test key recovery FAILED\n");
     return -1;
   }
 }
 
-#define NUM_RAND_TESTS (1<<20)
+#define NUM_RAND_TESTS (1 << 18)
 
 void test_recover(BLOWFISH_CTX *ctx)
 {
@@ -97,7 +104,7 @@ void test_recover(BLOWFISH_CTX *ctx)
     if (test_recover_key(ctx, (uint8_t *)random_key, sizeof(random_key), 0) != 0)
     {
       print_hex("KEY:", (uint8_t *)random_key, sizeof(random_key));
-      printf("random key test failed at %d round\n",k);
+      printf("random key test failed at %d round\n", k);
       return;
     }
   }

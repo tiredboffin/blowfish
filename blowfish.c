@@ -19,6 +19,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "blowfish.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define N 16
 
@@ -310,31 +313,19 @@ void Blowfish_Encrypt(BLOWFISH_CTX *ctx, uint32_t *xl, uint32_t *xr)
 {
   uint32_t Xl;
   uint32_t Xr;
-  uint32_t temp;
   int16_t i;
 
   Xl = *xl;
   Xr = *xr;
 
-  for (i = 0; i < N; ++i)
+  for (i = 0; i < N; i += 2)
   {
-    Xl = Xl ^ ctx->P[i];
-    Xr = F(ctx, Xl) ^ Xr;
-
-    temp = Xl;
-    Xl = Xr;
-    Xr = temp;
+    Xr ^= F(ctx, Xl ^ ctx->P[i]) ^ ctx->P[i + 1];
+    Xl ^= F(ctx, Xr) ^ ctx->P[i];
   }
 
-  temp = Xl;
-  Xl = Xr;
-  Xr = temp;
-
-  Xr = Xr ^ ctx->P[N];
-  Xl = Xl ^ ctx->P[N + 1];
-
-  *xl = Xl;
-  *xr = Xr;
+  *xl = Xr ^ ctx->P[N];
+  *xr = Xl ^ ctx->P[N + 1];
 }
 
 void Blowfish_Decrypt(BLOWFISH_CTX *ctx, uint32_t *xl, uint32_t *xr)
@@ -370,7 +361,6 @@ void Blowfish_Decrypt(BLOWFISH_CTX *ctx, uint32_t *xl, uint32_t *xr)
   *xr = Xr;
 }
 
-
 void Blowfish_Init_P_from_P(BLOWFISH_CTX *ctx, P18 P)
 {
   int32_t i, j, k;
@@ -385,7 +375,7 @@ void Blowfish_Init_P_from_P(BLOWFISH_CTX *ctx, P18 P)
   for (i = 0; i < N + 2; i += 2)
   {
     ctx->P[i] = P[i];
-    ctx->P[i + 1] = P[i+1];
+    ctx->P[i + 1] = P[i + 1];
   }
 }
 
@@ -492,7 +482,6 @@ void Blowfish_Init(BLOWFISH_CTX *ctx, uint8_t *key, int32_t keyLen)
 static void D(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
 {
   uint32_t Xl, Xr;
-
   if (idx < 2)
   {
     Xl = 0;
@@ -505,12 +494,9 @@ static void D(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
   }
   for (int i = 0; i < idx; ++i)
   {
-    uint32_t tmp;
-    Xl = Xl ^ ctx->P[i];
-    Xr = Xr ^ F(ctx, Xl);
-    tmp = Xl;
-    Xl = Xr;
-    Xr = tmp;
+    uint32_t tmp = Xr;
+    Xr = Xl ^ ctx->P[i];
+    Xl = tmp ^ F(ctx, Xr);
   }
   *l = Xr;
   *r = Xl;
@@ -520,46 +506,35 @@ static void U(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
 {
   uint32_t Xl = ctx->P[idx] ^ ctx->P[N + 1];
   uint32_t Xr = ctx->P[idx + 1] ^ ctx->P[N];
-
   for (int i = N - 1; i > idx + 1; --i)
   {
     uint32_t tmp = Xl;
     Xl = Xr ^ F(ctx, Xl);
     Xr = tmp ^ ctx->P[i];
   }
-
   *l = Xl;
   *r = Xr;
 }
 
-static void R(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
+void Blowfish_Recover_P(BLOWFISH_CTX *ctx)
 {
   uint32_t Ld, Rd, Lu, Ru;
 
-  D(ctx, idx, &Ld, &Rd);
-  U(ctx, idx, &Lu, &Ru);
+  Lu = ctx->P[N];
+  Ru = ctx->P[N + 1];
 
-  *l = F(ctx, Lu) ^ Rd ^ Ru;
-  *r = F(ctx, F(ctx, Lu) ^ Ru) ^ Ld ^ Lu;
-}
+  D(ctx, N, &Ld, &Rd);
 
-void Blowfish_Recover_P(BLOWFISH_CTX *ctx)
-{
-  uint32_t datal, datar;
+  ctx->P[N] = Rd ^ Ru;
+  ctx->P[N + 1] = Ld ^ Lu;
 
-  uint32_t tmpN = ctx->P[N];
-  uint32_t tmpN1 = ctx->P[N + 1];
-
-  D(ctx, N, &datal, &datar);
-
-  ctx->P[N + 1] = datal ^ tmpN;
-  ctx->P[N] = datar ^ tmpN1;
-
-  for (int i = 14; i >= 0; i -= 2)
+  for (int i = N - 2; i >= 0; i -= 2)
   {
-    R(ctx, i, &datal, &datar);
-    ctx->P[i] = datal;
-    ctx->P[i + 1] = datar;
+    D(ctx, i, &Ld, &Rd);
+    U(ctx, i, &Lu, &Ru);
+    uint32_t tmp = F(ctx, Lu) ^ Ru;
+    ctx->P[i] = tmp ^ Rd;
+    ctx->P[i + 1] = F(ctx, tmp) ^ Ld ^ Lu;
   }
   return;
 }
