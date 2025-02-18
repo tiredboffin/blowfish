@@ -1,5 +1,0 @@
-Illustrative functions to demonstrate key recovery from a known pre-computed P-table.
-
-Based on original blowfish code: https://www.schneier.com/wp-content/uploads/2015/12/bfsh-koc.zip
-
-Please see comments in blowfish.c for license and usage information.
