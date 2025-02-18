@@ -71,7 +71,7 @@ int test_recover_key(BLOWFISH_CTX *ctx, char *testkey, int len, int verbose)
 
 #define NUM_RAND_TESTS (1 << 18)
 
-void test_recover(BLOWFISH_CTX *ctx)
+int test_recover(BLOWFISH_CTX *ctx)
 {
 
   P18 P;
@@ -105,13 +105,14 @@ void test_recover(BLOWFISH_CTX *ctx)
     {
       print_hex("KEY:", (uint8_t *)random_key, sizeof(random_key));
       printf("random key test failed at %d round\n", k);
-      return;
+      return -1;
     }
   }
   printf("random key test OK\n");
+  return 0;
 }
 
-void main(void)
+int main(void)
 {
   uint32_t L = 1, R = 2;
   BLOWFISH_CTX ctx;
@@ -129,5 +130,5 @@ void main(void)
   else
     printf("Test decryption failed.\n");
 
-  test_recover(&ctx);
+  return test_recover(&ctx);
 }

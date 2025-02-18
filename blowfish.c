@@ -482,16 +482,17 @@ void Blowfish_Init(BLOWFISH_CTX *ctx, uint8_t *key, int32_t keyLen)
 static void D(BLOWFISH_CTX *ctx, int idx, uint32_t *l, uint32_t *r)
 {
   uint32_t Xl, Xr;
+
   if (idx < 2)
   {
-    Xl = 0;
-    Xr = 0;
+    *l = 0;
+    *r = 0;
+    return;
   }
-  else
-  {
-    Xl = ctx->P[idx - 2];
-    Xr = ctx->P[idx - 1];
-  }
+
+  Xl = ctx->P[idx - 2];
+  Xr = ctx->P[idx - 1];
+
   for (int i = 0; i < idx; ++i)
   {
     uint32_t tmp = Xr;
