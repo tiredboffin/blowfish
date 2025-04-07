@@ -1,4 +1,4 @@
-Recovery of the original Blowfish P-table from a known expanded P-table
+Recovery of the original Blowfish P-table and Key from a known expanded P-table
 based on Richard Schroeppel’s [report.pdf](https://www.osti.gov/servlets/purl/1141651)
 
 **Procedure for Recovery**:
